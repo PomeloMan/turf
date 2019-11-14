@@ -68,6 +68,9 @@ public class AStar {
 			System.arraycopy(matrix[i], 0, this.matrix[i], 0, matrix[0].length);
 		}
 
+		this.matrix[mapInfo.getStart().getCoord().getY()][mapInfo.getStart().getCoord().getX()] = 9;
+		this.matrix[mapInfo.getEnd().getCoord().getY()][mapInfo.getEnd().getCoord().getX()] = 9;
+
 		openList.add(mapInfo.getStart());
 		moveNodes(mapInfo);
 	}
@@ -135,7 +138,6 @@ public class AStar {
 				if (isEndNode(end.getCoord(), coord)) {
 					child = end;
 					child.setParent(current);
-					;
 					child.setG(G);
 					child.setH(H);
 				} else {
@@ -183,7 +185,7 @@ public class AStar {
 	 */
 	private boolean canAddNodeToOpen(MatrixMap mapInfo, int x, int y) {
 		// 是否在地图中
-		if (x < 0 || x >= mapInfo.getWidth() || y < 0 || y >= mapInfo.getHeight())
+		if (x < 0 || x >= this.matrix[0].length || y < 0 || y >= this.matrix.length)
 			return false;
 		// 判断是否是不可通过的结点
 		if (this.matrix[y][x] == BAR)

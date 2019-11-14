@@ -11,16 +11,14 @@ import com.mapbox.geojson.LineString;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 import com.mapbox.turf.TurfMeasurement;
-import com.pactera.astar.AStar;
 import com.pactera.astar.MatrixMap;
 
 public class TurfMisc {
 
 	private TurfMisc() {
-		throw new AssertionError("No Instances.");
 	}
 
-	public static Feature shortestPath(Point startPt, Point endPt, GeoJson geojson) {
+	public static LineString shortestPath(Point startPt, Point endPt, GeoJson geojson) {
 		// Normalize Inputs
 		Feature startFt = Feature.fromGeometry(startPt);
 		Feature endFt = Feature.fromGeometry(endPt);
@@ -28,11 +26,10 @@ public class TurfMisc {
 		// Handle obstacles
 		FeatureCollection obstacles = null;
 		FeatureCollection collection = null;
-		System.out.println(geojson.type());
 		if ("FeatureCollection".equals(geojson.type())) {
 			FeatureCollection featureCollection = (FeatureCollection) geojson;
 			if (featureCollection.features().size() == 0) {
-				return Feature.fromGeometry(LineString.fromLngLats(Lists.newArrayList(startPt, endPt)));
+				return LineString.fromLngLats(Lists.newArrayList(startPt, endPt));
 			} else {
 				obstacles = featureCollection;
 				List<Feature> features = Lists.newArrayList(featureCollection.features());
@@ -54,7 +51,6 @@ public class TurfMisc {
 
 		double[] box = TurfMeasurement.bbox(com.pactera.turf.TurfTransformation
 				.transformScale(TurfMeasurement.bboxPolygon(TurfMeasurement.bbox(collection)), 1.15));
-//		double[] box = { -6.052378646445732, -7.300000000000001, 10.052378646445732, -2.7000000000000015 };
 
 		double width = TurfMeasurement.distance(Point.fromLngLat(box[0], box[1]), Point.fromLngLat(box[2], box[1]));
 		double resolution = width / 100;
@@ -97,7 +93,7 @@ public class TurfMisc {
 			while (currentX <= east) {
 				Point pt = Point.fromLngLat(currentX, currentY);
 				boolean isInsideObstacle = isInside(pt, obstacles);
-				matrixRow[c] = isInsideObstacle ? 0 : 1;
+				matrixRow[c] = isInsideObstacle ? 1 : 0;
 				// map point's coords
 				pointMatrixRow[c] = currentX + "|" + currentY;
 				// set closest points
@@ -124,12 +120,11 @@ public class TurfMisc {
 		}
 
 		// a-star algorithm
-		MatrixMap info = new MatrixMap(matrix[0].length, matrix.length, 1, (FeatureCollection) obstacles);
+		MatrixMap info = new MatrixMap();
+		info.setMatrix(matrix);
 		info.shortestPath(new double[] { closestToStart[0], closestToStart[1] },
 				new double[] { closestToEnd[0], closestToEnd[1] });
-		AStar astar = new AStar();
-		astar.start(info);
-		List<int[]> results = astar.getPathList();
+		List<int[]> results = info.getPaths();
 		Collections.reverse(results);
 
 		List<Point> path = Lists.newArrayList();
@@ -140,14 +135,7 @@ public class TurfMisc {
 		}
 		path.add(endPt);
 
-		for (int i = 0; i < matrix.length; i++) {
-			for (int j = 0; j < matrix[i].length; j++) {
-				System.out.print(matrix[i][j] + " ");
-			}
-			System.out.println();
-		}
-
-		return Feature.fromGeometry(LineString.fromLngLats(path));
+		return LineString.fromLngLats(path);
 	}
 
 	/**
@@ -158,10 +146,20 @@ public class TurfMisc {
 	 * @param {FeatureCollection<Polygon>} polygons features
 	 * @returns {boolean} if inside or not
 	 */
-	private static boolean isInside(Point pt, FeatureCollection polygons) {
-		for (int i = 0; i < polygons.features().size(); i++) {
-			if (TurfBooleans.booleanPointInPolygon(pt, (Polygon) polygons.features().get(i).geometry())) {
-				return true;
+	public static boolean isInside(Point pt, FeatureCollection collection) {
+		for (int i = 0; i < collection.features().size(); i++) {
+			Feature feature = collection.features().get(i);
+			if (feature.geometry().type().equals("Polygon")) {
+				if (TurfBooleans.booleanPointInPolygon(pt, (Polygon) feature.geometry())) {
+					return true;
+				}
+			} else if (feature.geometry().type().equals("Point")) {
+				if (pt.longitude() == ((Point) feature.geometry()).longitude()
+						&& pt.latitude() == ((Point) feature.geometry()).latitude()) {
+					return true;
+				}
+			} else if (feature.geometry().type().equals("LineString")) {
+
 			}
 		}
 		return false;

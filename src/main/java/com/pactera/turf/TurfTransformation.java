@@ -80,25 +80,4 @@ public class TurfTransformation {
 	private static Point defineOrigin(GeoJson geojson) {
 		return TurfMeasurement.center(geojson);
 	}
-
-	public static void main(String[] args) {
-		String featureJson = "{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[0,-7],[5,-7],[5,-3],[0,-3],[0,-7]]]}}";
-		Feature feature = Feature.fromJson(featureJson);
-		Point start = Point.fromJson("{\"coordinates\":[-5,-6]}");
-		Point end = Point.fromJson("{\"coordinates\":[9,-6]}");
-		Feature startFt = Feature.fromGeometry(start);
-		Feature endFt = Feature.fromGeometry(end);
-		FeatureCollection collection = FeatureCollection
-				.fromFeatures(new Feature[] { Feature.fromGeometry(feature.geometry()), startFt, endFt });
-		double[] box = com.mapbox.turf.TurfMeasurement.bbox(collection);
-		for (double d : box) {
-			System.out.print(d + ",");
-		}
-		System.out.println();
-		GeoJson p = transformScale(com.mapbox.turf.TurfMeasurement.bboxPolygon(box), 1.15);
-		double[] box2 = com.mapbox.turf.TurfMeasurement.bbox(p);
-		for (double d : box2) {
-			System.out.print(d + ",");
-		}
-	}
 }

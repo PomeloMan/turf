@@ -2,8 +2,6 @@ package com.pactera.turf;
 
 import java.util.List;
 
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
 import com.mapbox.geojson.GeoJson;
 import com.mapbox.geojson.Point;
 import com.mapbox.turf.TurfConversion;
@@ -238,17 +236,4 @@ public class TurfMeasurement {
 																										// −180..+180°
 	}
 
-	public static void main(String[] args) {
-		String featureJson = "{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[0,-7],[5,-7],[5,-3],[0,-3],[0,-7]]]}}";
-		Feature feature = Feature.fromJson(featureJson);
-		Point start = Point.fromJson("{\"coordinates\":[-5,-6]}");
-		Point end = Point.fromJson("{\"coordinates\":[9,-6]}");
-		Feature startFt = Feature.fromGeometry(start);
-		Feature endFt = Feature.fromGeometry(end);
-		FeatureCollection collection = FeatureCollection
-				.fromFeatures(new Feature[] { Feature.fromGeometry(feature.geometry()), startFt, endFt });
-		double[] box = com.mapbox.turf.TurfMeasurement.bbox(collection);
-		Point p = center(com.mapbox.turf.TurfMeasurement.bboxPolygon(box));
-		System.out.println(p);
-	}
 }
